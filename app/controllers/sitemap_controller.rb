@@ -6,15 +6,10 @@ class SitemapController < Spree::BaseController
     @pages = _select_static_pages
     
     respond_to do |format|
-      format.html {  }
       format.xml do
         nav = _build_taxon_hash
         nav = _build_pages_hash nav
         render :layout => false, :xml => _build_xml(nav)
-      end
-      format.text do
-        @nav = _add_products_to_tax(_build_taxon_hash, false)
-        render :layout => false
       end
     end
   end
@@ -59,7 +54,7 @@ class SitemapController < Spree::BaseController
       tinfo = Hash.new
       tinfo['name'] = taxon.name
       tinfo['depth'] = taxon.permalink.split('/').size
-      tinfo['link'] = taxons_url(taxon.permalink) 
+      tinfo['link'] = root_url + taxon.permalink 
       tinfo['updated'] = taxon.updated_at
       _add_products_to_tax(nav, taxon)
       nav[taxon.permalink] = tinfo
@@ -71,7 +66,7 @@ class SitemapController < Spree::BaseController
     taxon.active_products.each do |product|
       pinfo = Hash.new
       pinfo['name'] = product.name
-      pinfo['link'] = product_url(:id => product.permalink, :taxon => taxon.permalink) # primary
+      pinfo['link'] = product_url(:id => product.permalink) # primary
       pinfo['updated'] = product.updated_at
       nav[pinfo['link']] = pinfo				# store primary
     end
@@ -83,7 +78,7 @@ class SitemapController < Spree::BaseController
     
     @pages.each do |page|
       nav[page.slug] = {'name' => page.title,
-                        'link' => content_url(page.slug),
+                        'link' => root_url + page.slug.name,
                         'updated' => page.updated_at}
     end
     nav
@@ -93,7 +88,7 @@ class SitemapController < Spree::BaseController
     pages = []
     begin
       Page.visible.each do |page|
-        next if slugs_to_reject.any? {|r| page.slug.match( r ) }
+        next if slugs_to_reject.any? {|r| page.slug.name.match( r ) }
         pages << page
       end
       
